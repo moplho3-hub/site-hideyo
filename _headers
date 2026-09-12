@@ -7,5 +7,8 @@
   Cross-Origin-Opener-Policy: same-origin
   Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; form-action 'self' https://formspree.io; frame-ancestors 'none'; base-uri 'self'; object-src 'none'
 
+# Une semaine, avec revalidation en arriere-plan. Surtout PAS "immutable" :
+# nos fichiers ne sont pas versionnes, donc une photo remplacee sous le meme nom
+# doit pouvoir remonter. Et si un fichier manque, on ne veut pas figer l'erreur.
 /assets/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
