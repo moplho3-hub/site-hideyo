@@ -140,8 +140,8 @@
                   Vide = le visiteur envoie depuis sa propre application mail.
        MAILTO   : l'adresse email de Hideyo, utilisee dans les deux cas.
   --------------------------------------------------------------------- */
-  var ENDPOINT = '';
-  var MAILTO   = 'ADRESSE-DE-HIDEYO@example.com';
+  var ENDPOINT = 'https://formspree.io/f/mnpqrezl';
+  var MAILTO   = 'moplho3@gmail.com';
 
   var form = document.getElementById('enquiry');
   if (form){
