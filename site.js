@@ -1,4 +1,3 @@
-
 (function(){
   var root = document.documentElement;
   root.classList.add('js');
@@ -141,7 +140,26 @@
        MAILTO   : l'adresse email de Hideyo, utilisee dans les deux cas.
   --------------------------------------------------------------------- */
   var ENDPOINT = 'https://formspree.io/f/mnpqrezl';
-  var MAILTO   = 'moplho3@gmail.com';
+  var MAILTO   = 'moplho3@gmail.com';   /* <- adresse de test, a remplacer par celle de Hideyo */
+
+  /* Garde-fous : le quota Formspree est de 50 envois par mois. Trois filtres,
+     tous cote navigateur, donc gratuits et invisibles pour un vrai visiteur :
+       1. le piege a robots (champ "company" cache, deja dans le HTML)
+       2. un formulaire rempli en moins de 4 secondes n'est pas humain
+       3. deux fois le meme message, ou deux envois en moins de 2 minutes,
+          ne repartent pas sur le reseau */
+  var OUVERTURE = Date.now();
+  var DELAI_MINI = 4000;
+  var ATTENTE    = 120000;
+  function memoire(k, v){
+    try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }
+    catch(e){ return null; }
+  }
+  function empreinte(t){
+    var h = 0, i;
+    for (i = 0; i < t.length; i++){ h = ((h << 5) - h + t.charCodeAt(i)) | 0; }
+    return String(h);
+  }
 
   var form = document.getElementById('enquiry');
   if (form){
@@ -208,12 +226,34 @@
         return;
       }
 
+      /* --- filtres avant de consommer un envoi --- */
+      if (Date.now() - OUVERTURE < DELAI_MINI){
+        say(ja() ? '入力内容をご確認のうえ、もう一度送信してください。'
+                 : 'Please take a moment to check your message, then send again.', true);
+        return;
+      }
+      var sceau = empreinte(lastBody);
+      var dernier = memoire('envoi_dernier');
+      var quand   = parseInt(memoire('envoi_quand') || '0', 10);
+      if (dernier === sceau){
+        say(ja() ? '同じ内容がすでに送信されています。お返事をお待ちください。'
+                 : 'That message has already been sent. I will come back to you shortly.');
+        return;
+      }
+      if (Date.now() - quand < ATTENTE){
+        say(ja() ? 'しばらく時間をおいてから、もう一度お試しください。'
+                 : 'Just sent one. Please wait a couple of minutes before sending another.', true);
+        return;
+      }
+
       btn.disabled = true;
       say(ja() ? '送信中...' : 'Sending...');
       fetch(ENDPOINT, { method:'POST', headers:{ 'Accept':'application/json' }, body:d })
         .then(function(r){
           if (!r.ok) throw new Error('http ' + r.status);
           form.reset();
+          memoire('envoi_dernier', sceau);
+          memoire('envoi_quand', String(Date.now()));
           say(ja() ? '送信しました。24時間以内にご返信します。'
                    : 'Sent. You will have an answer within 24 hours.');
         })
